@@ -234,6 +234,7 @@ func buildGetClassField(classObject *graphql.Object,
 			"nearObject": nearObjectArgument(class.Class),
 			"where":      whereArgument(class.Class),
 			"group":      groupArgument(class.Class),
+			"groupBy":    groupByArgument(class.Class),
 		},
 		Resolve: newResolver(modulesProvider).makeResolveGetClass(class.Class),
 	}
@@ -416,6 +417,12 @@ func (r *resolver) makeResolveGetClass(className string) graphql.FieldResolveFn 
 
 		group := extractGroup(p.Args)
 
+		var groupByParams *searchparams.GroupBy
+		if groupBy, ok := p.Args["groupBy"]; ok {
+			p := common_filters.ExtractGroupBy(groupBy.(map[string]interface{}))
+			groupByParams = &p
+		}
+
 		params := dto.GetParams{
 			Filters:               filters,
 			ClassName:             className,
@@ -431,6 +438,7 @@ func (r *resolver) makeResolveGetClass(className string) graphql.FieldResolveFn 
 			KeywordRanking:        keywordRankingParams,
 			HybridSearch:          hybridParams,
 			ReplicationProperties: replProps,
+			GroupBy:               groupByParams,
 		}
 
 		// need to perform vector search by distance
@@ -535,7 +543,7 @@ func (ac *additionalCheck) isAdditional(name string) bool {
 	if name == "classification" || name == "certainty" ||
 		name == "distance" || name == "id" || name == "vector" ||
 		name == "creationTimeUnix" || name == "lastUpdateTimeUnix" ||
-		name == "score" || name == "explainScore" {
+		name == "score" || name == "explainScore" || name == "group" {
 		return true
 	}
 	if ac.isModuleAdditional(name) {
@@ -604,12 +612,10 @@ func extractProperties(className string, selections *ast.SelectionSet,
 							additionalProps.Certainty = true
 							continue
 						}
-
 						if additionalProperty == "distance" {
 							additionalProps.Distance = true
 							continue
 						}
-
 						if additionalProperty == "id" {
 							additionalProps.ID = true
 							continue
@@ -632,6 +638,10 @@ func extractProperties(className string, selections *ast.SelectionSet,
 						}
 						if additionalProperty == "lastUpdateTimeUnix" {
 							additionalProps.LastUpdateTimeUnix = true
+							continue
+						}
+						if additionalProperty == "group" {
+							additionalProps.Group = true
 							continue
 						}
 						if modulesProvider != nil {

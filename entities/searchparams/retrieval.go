@@ -71,3 +71,9 @@ type NearTextParams struct {
 	Network      bool
 	Autocorrect  bool
 }
+
+type GroupBy struct {
+	Property        string
+	Groups          int
+	ObjectsPerGroup int
+}

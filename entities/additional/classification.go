@@ -51,4 +51,8 @@ type Properties struct {
 	// make any comparisons, and erroneously returns
 	// empty, or with fewer results than expected.
 	ReferenceQuery bool `json:"-"`
+
+	// Group field is used here to indicate that
+	// groupBy operation has performed
+	Group bool `json:"-"`
 }

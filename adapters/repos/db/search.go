@@ -110,7 +110,7 @@ func (db *DB) VectorClassSearch(ctx context.Context,
 
 	targetDist := extractDistanceFromParams(params)
 	res, dists, err := idx.objectVectorSearch(ctx, params.SearchVector, targetDist,
-		totalLimit, params.Filters, params.Sort, params.AdditionalProperties)
+		totalLimit, params.Filters, params.Sort, params.GroupBy, params.AdditionalProperties)
 	if err != nil {
 		return nil, errors.Wrapf(err, "object vector search at index %s", idx.ID())
 	}
@@ -150,8 +150,9 @@ func (db *DB) ClassObjectVectorSearch(ctx context.Context, class string, vector 
 		return nil, nil, fmt.Errorf("tried to browse non-existing index for %s", class)
 	}
 
+	// TODO: groupBy think of this
 	objs, dist, err := index.objectVectorSearch(
-		ctx, vector, 0, totalLimit, filters, nil, additional.Properties{})
+		ctx, vector, 0, totalLimit, filters, nil, nil, additional.Properties{})
 	if err != nil {
 		return nil, nil, fmt.Errorf("search index %s: %w", index.ID(), err)
 	}
@@ -207,7 +208,7 @@ func (db *DB) VectorSearch(ctx context.Context, vector []float32, offset, limit 
 			defer wg.Done()
 
 			objs, dist, err := index.objectVectorSearch(
-				ctx, vector, 0, totalLimit, filters, nil, additional.Properties{})
+				ctx, vector, 0, totalLimit, filters, nil, nil, additional.Properties{})
 			if err != nil {
 				mutex.Lock()
 				searchErrors = append(searchErrors, errors.Wrapf(err, "search index %s", index.ID()))
